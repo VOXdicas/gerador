@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Link WhatsApp</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md bg-slate-800 rounded-2xl shadow-xl p-6 border border-slate-700">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-emerald-400">Gerador de Link WhatsApp</h1>
+            <p class="text-sm text-slate-400 mt-1">Número fixo: <span class="font-semibold text-slate-200">(81) 98904-7080</span></p>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label for="message" class="block text-sm font-medium text-slate-300 mb-2">Mensagem personalizada:</label>
+                <textarea id="message" rows="4" 
+                    class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-100 placeholder-slate-500 text-sm resize-none"
+                    placeholder="Digite a mensagem que aparecerá pronta para o cliente..."></textarea>
+            </div>
+
+            <button onclick="generateLink()" 
+                class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2">
+                <span>Gerar Link Encurtado</span>
+            </button>
+        </div>
+
+        <!-- Resultado -->
+        <div id="resultContainer" class="mt-6 hidden space-y-3 pt-6 border-t border-slate-700">
+            <label class="block text-sm font-medium text-slate-300">Link Pronto:</label>
+            <div class="flex items-center gap-2">
+                <input type="text" id="shortUrlOutput" readonly 
+                    class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-300 text-sm focus:outline-none">
+                <button onclick="copyLink()" 
+                    class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-medium transition duration-200 whitespace-nowrap">
+                    Copiar
+                </button>
+            </div>
+            <a id="whatsappBtn" href="#" target="_blank" 
+                class="block w-full text-center bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200 text-sm">
+                Testar Link
+            </a>
+        </div>
+    </div>
+
+    <script>
+        async function generateLink() {
+            const phone = "5581989047080";
+            const message = document.getElementById('message').value.trim();
+            const resultContainer = document.getElementById('resultContainer');
+            const shortUrlInput = document.getElementById('shortUrlOutput');
+            const whatsappBtn = document.getElementById('whatsappBtn');
+
+            if (!message) {
+                alert('Por favor, digite uma mensagem.');
+                return;
+            }
+
+            // Monta a URL original do WhatsApp
+            const encodedMessage = encodeURIComponent(message);
+            const originalUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+
+            shortUrlInput.value = "Gerando link encurtado...";
+            resultContainer.classList.remove('hidden');
+
+            try {
+                // Utiliza a API do TinyURL para encurtar o link sem precisar de chave de API
+                const response = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(originalUrl)}`;
+                const res = await fetch(response);
+                const shortUrl = await res.text();
+
+                if (shortUrl.startsWith('http')) {
+                    shortUrlInput.value = shortUrl;
+                    whatsappBtn.href = shortUrl;
+                } else {
+                    // Fallback caso a API falhe
+                    shortUrlInput.value = originalUrl;
+                    whatsappBtn.href = originalUrl;
+                }
+            } catch (error) {
+                // Fallback se houver bloqueio de CORS ou erro de rede
+                shortUrlInput.value = originalUrl;
+                whatsappBtn.href = originalUrl;
+            }
+        }
+
+        function copyLink() {
+            const shortUrlInput = document.getElementById('shortUrlOutput');
+            shortUrlInput.select();
+            document.execCommand('copy');
+            
+            // Feedback visual simples
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "Copiado!";
+            btn.bg = "bg-emerald-700";
+            setTimeout(() => {
+                btn.innerText = originalText;
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
